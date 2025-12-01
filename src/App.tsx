@@ -1,15 +1,20 @@
 import { useState, useRef } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css'
 import './assets/css/appHome.css'
 import Piano from './components/piano'
 import MessageGenerator from './components/MessageGenerator'
 import MessageExtractor from './components/MessageExtractor'
+import CryptoModeAlert from './components/CryptoModeAlert'
 import { embedMessageInWav } from './utils/steganography'
 
-type AppMode = 'home' | 'record' | 'extract';
+type AppMode = 'piano' | 'extract';
 
 function App() {
-  const [mode, setMode] = useState<AppMode>('home');
+  const [mode, setMode] = useState<AppMode>('piano');
+  const [cryptoModeEnabled, setCryptoModeEnabled] = useState(false);
+  const [showCryptoAlert, setShowCryptoAlert] = useState(false);
   const [showMessageGenerator, setShowMessageGenerator] = useState(false);
   const [hasRecording, setHasRecording] = useState(false);
   const recordedBlobRef = useRef<Blob | null>(null);
@@ -45,7 +50,7 @@ function App() {
       recordedBlobRef.current = null;
     } catch (error) {
       console.error('Error al insertar mensaje:', error);
-      alert('Error al insertar el mensaje en el audio. El mensaje puede ser demasiado largo.');
+      toast.error('Error al insertar el mensaje en el audio. El mensaje puede ser demasiado largo.');
     }
   };
 
@@ -54,43 +59,23 @@ function App() {
     setHasRecording(false);
   };
 
-  const handleBackToHome = () => {
-    setMode('home');
+  const handleCryptoModeActivated = () => {
+    setCryptoModeEnabled(true);
+    setShowCryptoAlert(true);
+  };
+
+  const handleBackToPiano = () => {
+    setMode('piano');
     setShowMessageGenerator(false);
     setHasRecording(false);
     recordedBlobRef.current = null;
   };
 
-  if (mode === 'home') {
-    return (
-      <div className="app-home">
-        <div className="home-container">
-          <h1 className="home-title">Piano Crypto</h1>
-          <p className="home-subtitle">Esteganografía en audio</p>
-          <div className="home-actions">
-            <button
-              className="home-btn record-btn"
-              onClick={() => setMode('record')}
-            >
-              🎹 Grabar y Ocultar Mensaje
-            </button>
-            <button
-              className="home-btn extract-btn"
-              onClick={() => setMode('extract')}
-            >
-              🔍 Extraer Mensaje
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (mode === 'extract') {
     return (
       <>
-        <button className="back-btn" onClick={handleBackToHome}>
-          ← Volver
+        <button className="back-btn" onClick={handleBackToPiano}>
+          ← Volver al Piano
         </button>
         <MessageExtractor />
       </>
@@ -99,14 +84,39 @@ function App() {
 
   return (
     <>
-      <button className="back-btn" onClick={handleBackToHome}>
-        ← Volver
-      </button>
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+      {showCryptoAlert && (
+        <CryptoModeAlert onClose={() => setShowCryptoAlert(false)} />
+      )}
+      {cryptoModeEnabled && (
+        <div className="crypto-mode-banner">
+          <span>🔒 Modo Criptográfico Activo</span>
+          <button 
+            className="extract-mode-btn"
+            onClick={() => setMode('extract')}
+          >
+            🔍 Extraer Mensaje
+          </button>
+        </div>
+      )}
       {!showMessageGenerator ? (
         <Piano 
           onAddSecret={handleAddSecret}
           hasRecording={hasRecording}
           onBlobReady={handleBlobReady}
+          onCryptoModeActivated={handleCryptoModeActivated}
+          cryptoModeEnabled={cryptoModeEnabled}
         />
       ) : (
         <MessageGenerator

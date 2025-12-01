@@ -9,6 +9,8 @@
     0 8px 32px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
+  height: 100%;
+  min-height: 0;
 }
 
 .panel-header {
@@ -32,7 +34,11 @@
   flex: 1;
   padding: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
   color: #e0e0e0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .preview-content::-webkit-scrollbar {
@@ -114,6 +120,8 @@
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
   font-size: 0.9em;
   color: #ffd700;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .preview-content pre {
@@ -121,6 +129,9 @@
   padding: 15px;
   border-radius: 8px;
   overflow-x: auto;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin: 1em 0;
 }
@@ -175,7 +186,10 @@
 .preview-content table {
   border-collapse: collapse;
   width: 100%;
+  max-width: 100%;
   margin: 1em 0;
+  table-layout: auto;
+  word-wrap: break-word;
 }
 
 .preview-content th,

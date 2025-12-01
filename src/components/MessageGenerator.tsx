@@ -53,7 +53,6 @@ function hello() {
     <div className="message-generator-container">
       <div className="generator-header">
         <h1>Editor de Mensajes</h1>
-        <p>Escribe con Markdown y LaTeX</p>
       </div>
       <div className="generator-wrapper">
         <TextEditor

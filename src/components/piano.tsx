@@ -43,13 +43,25 @@ interface PianoProps {
   onAddSecret?: () => void;
   hasRecording?: boolean;
   onBlobReady?: (blob: Blob) => void;
+  onCryptoModeActivated?: () => void;
+  cryptoModeEnabled?: boolean;
 }
 
-const Piano: React.FC<PianoProps> = ({ onAddSecret, hasRecording = false, onBlobReady }) => {
+const CRYPTO_SEQUENCE = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+const Piano: React.FC<PianoProps> = ({ 
+  onAddSecret, 
+  hasRecording = false, 
+  onBlobReady,
+  onCryptoModeActivated,
+  cryptoModeEnabled = false
+}) => {
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeNotesRef = useRef<Map<string, ActiveNote>>(new Map());
   const recordingGainRef = useRef<GainNode | null>(null);
+  const sequenceRef = useRef<string[]>([]);
+  const sequenceTimeoutRef = useRef<number | null>(null);
 
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -93,9 +105,73 @@ const Piano: React.FC<PianoProps> = ({ onAddSecret, hasRecording = false, onBlob
     });
   }, [getAudioContext]);
 
+  const checkCryptoSequence = useCallback((note: string) => {
+    if (cryptoModeEnabled) return;
+
+    sequenceRef.current.push(note);
+    
+    if (sequenceTimeoutRef.current) {
+      clearTimeout(sequenceTimeoutRef.current);
+    }
+
+    sequenceTimeoutRef.current = window.setTimeout(() => {
+      sequenceRef.current = [];
+    }, 3000);
+
+    if (sequenceRef.current.length > CRYPTO_SEQUENCE.length) {
+      sequenceRef.current = sequenceRef.current.slice(-CRYPTO_SEQUENCE.length);
+    }
+
+    if (sequenceRef.current.length === CRYPTO_SEQUENCE.length) {
+      const matches = sequenceRef.current.every((n, i) => n === CRYPTO_SEQUENCE[i]);
+      if (matches && onCryptoModeActivated) {
+        sequenceRef.current = [];
+        if (sequenceTimeoutRef.current) {
+          clearTimeout(sequenceTimeoutRef.current);
+          sequenceTimeoutRef.current = null;
+        }
+        
+        // Detener todas las notas activas antes de activar el modo criptográfico
+        const activeKeys = Array.from(activeNotesRef.current.keys());
+        activeKeys.forEach(key => {
+          stopSound(key, true);
+        });
+        
+        // Limpiar inmediatamente el estado visual de todas las teclas
+        setPressedKeys(new Set());
+        
+        // Limpiar todas las notas activas inmediatamente
+        activeNotesRef.current.forEach((note) => {
+          try {
+            note.osc1.stop();
+            note.osc2.stop();
+            note.osc1Gain.disconnect();
+            note.osc2Gain.disconnect();
+            note.masterGain.disconnect();
+          } catch {
+            // Ignorar errores si ya están desconectadas
+          }
+        });
+        activeNotesRef.current.clear();
+        
+        // Pequeño delay para asegurar que las notas se detengan
+        setTimeout(() => {
+          onCryptoModeActivated();
+        }, 100);
+      }
+    }
+  }, [cryptoModeEnabled, onCryptoModeActivated, stopSound]);
+
   const playSound = useCallback((freq: number, _note: string, key: string) => {
     if (activeNotesRef.current.has(key)) {
       return;
+    }
+
+    if (!cryptoModeEnabled) {
+      const noteObj = NOTES.find(n => n.key === key);
+      if (noteObj && !noteObj.isSharp) {
+        checkCryptoSequence(noteObj.note);
+      }
     }
 
     stopSound(key, true);
@@ -167,7 +243,7 @@ const Piano: React.FC<PianoProps> = ({ onAddSecret, hasRecording = false, onBlob
     };
 
     resumeAudio();
-  }, [getAudioContext, stopSound]);
+  }, [getAudioContext, stopSound, checkCryptoSequence, cryptoModeEnabled]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.repeat) return;
@@ -275,15 +351,17 @@ const Piano: React.FC<PianoProps> = ({ onAddSecret, hasRecording = false, onBlob
           </div>
         )}
       </div> */}
-      <PianoRecorder
-        getAudioContext={getAudioContext}
-        onRecordingStateChange={(_, gainNode) => {
-          recordingGainRef.current = gainNode;
-        }}
-        onAddSecret={onAddSecret}
-        hasRecording={hasRecording}
-        onBlobReady={onBlobReady}
-      />
+      {cryptoModeEnabled && (
+        <PianoRecorder
+          getAudioContext={getAudioContext}
+          onRecordingStateChange={(_, gainNode) => {
+            recordingGainRef.current = gainNode;
+          }}
+          onAddSecret={onAddSecret}
+          hasRecording={hasRecording}
+          onBlobReady={onBlobReady}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,207 @@
+.crypto-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.crypto-alert-container {
+  position: relative;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 30px;
+  padding: 60px 80px;
+  text-align: center;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    0 0 80px rgba(0, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 255, 255, 0.1);
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 600px;
+  width: 90%;
+  overflow: hidden;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.crypto-alert-icon {
+  font-size: 120px;
+  margin: 0;
+  animation: pulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.6)) drop-shadow(0 0 60px rgba(0, 255, 255, 0.4));
+  color: #00ffff;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.crypto-alert-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin: 30px 0 10px 0;
+  text-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.5),
+    0 0 40px rgba(0, 255, 255, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.8);
+  letter-spacing: 3px;
+  animation: slideDown 0.6s ease-out 0.2s both;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.crypto-alert-subtitle {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #00ffff;
+  margin: 0;
+  text-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.8),
+    0 0 60px rgba(0, 255, 255, 0.5),
+    0 0 90px rgba(0, 255, 255, 0.3),
+    0 6px 12px rgba(0, 0, 0, 0.8);
+  letter-spacing: 8px;
+  animation: slideUp 0.6s ease-out 0.4s both;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.crypto-alert-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(0, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: float infinite ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100%) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%) translateX(50px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.crypto-alert-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: #00ffff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.crypto-alert-close:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.crypto-alert-close:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .crypto-alert-container {
+    padding: 40px 40px;
+    max-width: 90%;
+  }
+
+  .crypto-alert-icon {
+    font-size: 80px;
+  }
+
+  .crypto-alert-title {
+    font-size: 2.5rem;
+  }
+
+  .crypto-alert-subtitle {
+    font-size: 3rem;
+    letter-spacing: 4px;
+  }
+}
+

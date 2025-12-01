@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import "../App.css";
+import PianoRecorder from "./PianoRecorder";
 
 declare global {
   interface Window {
@@ -39,10 +40,10 @@ interface ActiveNote {
 }
 
 const Piano: React.FC = () => {
-  const [playedNotes, setPlayedNotes] = useState<string[]>([]);
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeNotesRef = useRef<Map<string, ActiveNote>>(new Map());
+  const recordingGainRef = useRef<GainNode | null>(null);
 
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -86,7 +87,7 @@ const Piano: React.FC = () => {
     });
   }, [getAudioContext]);
 
-  const playSound = useCallback((freq: number, note: string, key: string) => {
+  const playSound = useCallback((freq: number, _note: string, key: string) => {
     if (activeNotesRef.current.has(key)) {
       return;
     }
@@ -113,6 +114,10 @@ const Piano: React.FC = () => {
 
       const masterGain = audioCtx.createGain();
       masterGain.connect(audioCtx.destination);
+      
+      if (recordingGainRef.current) {
+        masterGain.connect(recordingGainRef.current);
+      }
 
       const attackTime = 0.005;
       const decayTime = 0.15;
@@ -152,7 +157,6 @@ const Piano: React.FC = () => {
         masterGain,
       });
 
-      setPlayedNotes((prev) => [...prev, note]);
       setPressedKeys((prev) => new Set(prev).add(key));
     };
 
@@ -265,6 +269,12 @@ const Piano: React.FC = () => {
           </div>
         )}
       </div> */}
+      <PianoRecorder
+        getAudioContext={getAudioContext}
+        onRecordingStateChange={(_, gainNode) => {
+          recordingGainRef.current = gainNode;
+        }}
+      />
     </div>
   );
 };

@@ -323,6 +323,7 @@ const Piano: React.FC<PianoProps> = ({
           </div>
         </div>
       </div>
+      <p style={{ color: 'white', fontSize: '14px', textAlign: 'center', marginTop: '20px' }}>Presiona en secuencia las notas C, D, E, F, G, A, B para activar el modo criptográfico</p>
       {/* <div className="played-notes">
         <h2>Notas tocadas</h2>
         <div className="notes-container">

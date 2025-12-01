@@ -227,14 +227,14 @@ const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecord
                 🔒 Añadir un secreto
               </button>
             )}
-            {!hasRecording && (
+            {/* {!hasRecording && (
               <button
                 className="recorder-btn download-btn"
                 onClick={downloadRecording}
               >
                 ⬇ Descargar WAV
               </button>
-            )}
+            )} */}
             {!hasRecording && (
               <button
                 className="recorder-btn clear-btn"

@@ -3,7 +3,12 @@ import TextEditor from './TextEditor';
 import MessageViewer from './MessageViewer';
 import '../assets/css/messageGenerator.css';
 
-const MessageGenerator: React.FC = () => {
+interface MessageGeneratorProps {
+  onFinish: (message: string) => void;
+  onCancel?: () => void;
+}
+
+const MessageGenerator: React.FC<MessageGeneratorProps> = ({ onFinish, onCancel }) => {
   const [content, setContent] = useState('');
 
   const defaultContent = `# Editor de Mensajes
@@ -58,6 +63,23 @@ function hello() {
           onClear={() => setContent('')}
         />
         <MessageViewer content={content} />
+      </div>
+      <div className="generator-actions">
+        <button
+          className="finish-btn"
+          onClick={() => onFinish(content)}
+          disabled={!content.trim()}
+        >
+          ✓ Terminar Mensaje
+        </button>
+        {onCancel && (
+          <button
+            className="cancel-btn"
+            onClick={onCancel}
+          >
+            ✕ Cancelar
+          </button>
+        )}
       </div>
     </div>
   );

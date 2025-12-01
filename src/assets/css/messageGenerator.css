@@ -36,6 +36,63 @@
   min-height: 600px;
 }
 
+.generator-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.finish-btn,
+.cancel-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.finish-btn {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.finish-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #52be80 0%, #27ae60 100%);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+  transform: translateY(-2px);
+}
+
+.finish-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.finish-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cancel-btn:active {
+  transform: scale(0.98);
+}
+
 @media (max-width: 1024px) {
   .generator-wrapper {
     grid-template-columns: 1fr;

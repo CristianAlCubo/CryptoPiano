@@ -116,6 +116,22 @@
   transform: scale(0.98);
 }
 
+.secret-btn {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+}
+
+.secret-btn:hover {
+  background: linear-gradient(135deg, #bb8fce 0%, #9b59b6 100%);
+  box-shadow: 0 6px 16px rgba(155, 89, 182, 0.4);
+  transform: translateY(-2px);
+}
+
+.secret-btn:active {
+  transform: translateY(0);
+}
+
 .record-icon {
   font-size: 1.2rem;
   animation: pulse 2s infinite;

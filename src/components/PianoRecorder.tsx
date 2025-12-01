@@ -4,9 +4,12 @@ import '../assets/css/pianoRecorder.css';
 interface PianoRecorderProps {
   getAudioContext: () => AudioContext | null;
   onRecordingStateChange?: (isRecording: boolean, recordingGain: GainNode | null) => void;
+  onAddSecret?: () => void;
+  hasRecording: boolean;
+  onBlobReady?: (blob: Blob) => void;
 }
 
-const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecordingStateChange }) => {
+const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecordingStateChange, onAddSecret, hasRecording, onBlobReady }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -135,15 +138,19 @@ const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecord
       if (recordingBufferRef.current.length > 0 && audioContext) {
         const wavBlob = convertToWav(recordingBufferRef.current, audioContext.sampleRate);
         setRecordedBlob(wavBlob);
+        if (onBlobReady) {
+          onBlobReady(wavBlob);
+        }
         recordingBufferRef.current = [];
       }
     }, 100);
-  }, [isRecording, getAudioContext, convertToWav, onRecordingStateChange]);
+  }, [isRecording, getAudioContext, convertToWav, onRecordingStateChange, onBlobReady]);
 
-  const downloadRecording = useCallback(() => {
-    if (!recordedBlob) return;
+  const downloadRecording = useCallback((blob?: Blob) => {
+    const blobToDownload = blob || recordedBlob;
+    if (!blobToDownload) return;
 
-    const url = URL.createObjectURL(recordedBlob);
+    const url = URL.createObjectURL(blobToDownload);
     const a = document.createElement('a');
     a.href = url;
     a.download = `piano-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
@@ -152,6 +159,7 @@ const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecord
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [recordedBlob]);
+
 
   const clearRecording = useCallback(() => {
     setRecordedBlob(null);
@@ -211,18 +219,30 @@ const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecord
         )}
         {recordedBlob && !isRecording && (
           <>
-            <button
-              className="recorder-btn download-btn"
-              onClick={downloadRecording}
-            >
-              ⬇ Descargar WAV
-            </button>
-            <button
-              className="recorder-btn clear-btn"
-              onClick={clearRecording}
-            >
-              ✕ Limpiar
-            </button>
+            {!hasRecording && (
+              <button
+                className="recorder-btn secret-btn"
+                onClick={onAddSecret}
+              >
+                🔒 Añadir un secreto
+              </button>
+            )}
+            {!hasRecording && (
+              <button
+                className="recorder-btn download-btn"
+                onClick={downloadRecording}
+              >
+                ⬇ Descargar WAV
+              </button>
+            )}
+            {!hasRecording && (
+              <button
+                className="recorder-btn clear-btn"
+                onClick={clearRecording}
+              >
+                ✕ Limpiar
+              </button>
+            )}
           </>
         )}
       </div>

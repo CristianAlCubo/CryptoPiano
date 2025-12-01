@@ -39,7 +39,13 @@ interface ActiveNote {
   masterGain: GainNode;
 }
 
-const Piano: React.FC = () => {
+interface PianoProps {
+  onAddSecret?: () => void;
+  hasRecording?: boolean;
+  onBlobReady?: (blob: Blob) => void;
+}
+
+const Piano: React.FC<PianoProps> = ({ onAddSecret, hasRecording = false, onBlobReady }) => {
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeNotesRef = useRef<Map<string, ActiveNote>>(new Map());
@@ -274,6 +280,9 @@ const Piano: React.FC = () => {
         onRecordingStateChange={(_, gainNode) => {
           recordingGainRef.current = gainNode;
         }}
+        onAddSecret={onAddSecret}
+        hasRecording={hasRecording}
+        onBlobReady={onBlobReady}
       />
     </div>
   );

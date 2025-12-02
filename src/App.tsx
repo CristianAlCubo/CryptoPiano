@@ -7,9 +7,10 @@ import Piano from './components/piano'
 import MessageGenerator from './components/MessageGenerator'
 import MessageExtractor from './components/MessageExtractor'
 import CryptoModeAlert from './components/CryptoModeAlert'
+import Contacts from './components/Contacts'
 import { embedMessageInWav } from './utils/steganography'
 
-type AppMode = 'piano' | 'extract';
+type AppMode = 'piano' | 'extract' | 'contacts';
 
 function App() {
   const [mode, setMode] = useState<AppMode>('piano');
@@ -74,10 +75,45 @@ function App() {
   if (mode === 'extract') {
     return (
       <>
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
         <button className="back-btn" onClick={handleBackToPiano}>
           ← Volver al Piano
         </button>
         <MessageExtractor />
+      </>
+    );
+  }
+
+  if (mode === 'contacts') {
+    return (
+      <>
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+        <button className="back-btn" onClick={handleBackToPiano}>
+          ← Volver al Piano
+        </button>
+        <Contacts />
       </>
     );
   }
@@ -102,12 +138,20 @@ function App() {
       {cryptoModeEnabled && (
         <div className="crypto-mode-banner">
           <span>🔒 Modo Criptográfico Activo</span>
-          <button 
-            className="extract-mode-btn"
-            onClick={() => setMode('extract')}
-          >
-            🔍 Extraer Mensaje
-          </button>
+          <div className="banner-actions">
+            <button 
+              className="extract-mode-btn"
+              onClick={() => setMode('extract')}
+            >
+              🔍 Extraer Mensaje
+            </button>
+            <button 
+              className="contacts-mode-btn"
+              onClick={() => setMode('contacts')}
+            >
+              👥 Contactos
+            </button>
+          </div>
         </div>
       )}
       {!showMessageGenerator ? (

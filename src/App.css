@@ -90,6 +90,25 @@ html, body {
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
 }
 
+.profile-mode-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+.profile-mode-btn:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
 .App h1 {
   color: #ffffff;
   font-size: 3rem;

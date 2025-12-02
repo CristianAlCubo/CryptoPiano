@@ -8,9 +8,10 @@ import MessageGenerator from './components/MessageGenerator'
 import MessageExtractor from './components/MessageExtractor'
 import CryptoModeAlert from './components/CryptoModeAlert'
 import Contacts from './components/Contacts'
+import Profile from './components/Profile'
 import { embedMessageInWav } from './utils/steganography'
 
-type AppMode = 'piano' | 'extract' | 'contacts';
+type AppMode = 'piano' | 'extract' | 'contacts' | 'profile';
 
 function App() {
   const [mode, setMode] = useState<AppMode>('piano');
@@ -118,6 +119,29 @@ function App() {
     );
   }
 
+  if (mode === 'profile') {
+    return (
+      <>
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+        <button className="back-btn" onClick={handleBackToPiano}>
+          ← Volver al Piano
+        </button>
+        <Profile />
+      </>
+    );
+  }
+
   return (
     <>
       <ToastContainer
@@ -150,6 +174,12 @@ function App() {
               onClick={() => setMode('contacts')}
             >
               👥 Contactos
+            </button>
+            <button 
+              className="profile-mode-btn"
+              onClick={() => setMode('profile')}
+            >
+              👤 Perfil
             </button>
           </div>
         </div>

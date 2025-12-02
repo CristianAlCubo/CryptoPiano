@@ -10,9 +10,10 @@ import CryptoModeAlert from './components/CryptoModeAlert'
 import Contacts from './components/Contacts'
 import Profile from './components/Profile'
 import CryptoPlayground from './components/CryptoPlayground'
+import SignaturePlayground from './components/SignaturePlayground'
 import { embedMessageInWav } from './utils/steganography'
 
-type AppMode = 'piano' | 'extract' | 'contacts' | 'profile' | 'crypto-playground';
+type AppMode = 'piano' | 'extract' | 'contacts' | 'profile' | 'crypto-playground' | 'signature-playground';
 
 function App() {
   const [mode, setMode] = useState<AppMode>('piano');
@@ -167,6 +168,29 @@ function App() {
     );
   }
 
+  if (mode === 'signature-playground') {
+    return (
+      <>
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+        <button className="back-btn" onClick={handleBackToPiano}>
+          ← Volver al Piano
+        </button>
+        <SignaturePlayground />
+      </>
+    );
+  }
+
   return (
     <>
       <ToastContainer
@@ -211,6 +235,12 @@ function App() {
               onClick={() => setMode('crypto-playground')}
             >
               🧪 Crypto Playground
+            </button>
+            <button 
+              className="signature-playground-btn"
+              onClick={() => setMode('signature-playground')}
+            >
+              ✍️ Signature Playground
             </button>
           </div>
         </div>

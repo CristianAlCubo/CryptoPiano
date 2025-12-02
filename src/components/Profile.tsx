@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import {
+  generateDilithiumKeyPair,
+  type DilithiumSecurityLevel
+} from '../utils/crypto';
 import '../assets/css/profile.css';
 
 const Profile: React.FC = () => {
@@ -8,6 +12,8 @@ const Profile: React.FC = () => {
   const [showImportForm, setShowImportForm] = useState(false);
   const [importPublicKey, setImportPublicKey] = useState('');
   const [importPrivateKey, setImportPrivateKey] = useState('');
+  const [securityLevel, setSecurityLevel] = useState<DilithiumSecurityLevel>(3);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     loadKeys();
@@ -32,16 +38,30 @@ const Profile: React.FC = () => {
     setPrivateKey(privKey);
   };
 
-  const handleGenerateKeys = () => {
-    const mockPublicKey = 'OWN_PUBLIC_KEY';
-    const mockPrivateKey = 'OWN_PRIVATE_KEY';
-    
-    saveKeys(mockPublicKey, mockPrivateKey);
-    toast.success('Claves generadas exitosamente', {
-      position: "top-center",
-      autoClose: 2000,
-      theme: "dark",
-    });
+  const handleGenerateKeys = async () => {
+    setIsGenerating(true);
+    try {
+      const keyPair = generateDilithiumKeyPair(securityLevel);
+      
+      const publicKeyBase64 = btoa(String.fromCharCode(...keyPair.publicKey));
+      const privateKeyBase64 = btoa(String.fromCharCode(...keyPair.privateKey));
+      
+      saveKeys(publicKeyBase64, privateKeyBase64);
+      toast.success('Par de claves Dilithium generado exitosamente', {
+        position: "top-center",
+        autoClose: 2000,
+        theme: "dark",
+      });
+    } catch (error) {
+      console.error('Error al generar claves:', error);
+      toast.error(`Error al generar claves: ${error instanceof Error ? error.message : 'Error desconocido'}`, {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleImportSubmit = (e: React.FormEvent) => {
@@ -83,7 +103,32 @@ const Profile: React.FC = () => {
 
   const handleCopyKey = async (key: string, type: string) => {
     try {
-      await navigator.clipboard.writeText(key);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(key);
+      } else {
+        // Fallback para navegadores que no soportan navigator.clipboard o contextos no seguros
+        const textArea = document.createElement("textarea");
+        textArea.value = key;
+        
+        // Asegurar que el elemento no sea visible
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          if (!successful) {
+            throw new Error('Falló la copia manual');
+          }
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+      
       toast.success(`${type} copiada al portapapeles`, {
         position: "top-center",
         autoClose: 2000,
@@ -105,7 +150,7 @@ const Profile: React.FC = () => {
     <div className="profile-container">
       <div className="profile-header">
         <h1>Perfil</h1>
-        <p>Gestiona tus claves criptográficas</p>
+        <p>Gestiona tus claves criptográficas post-cuánticas (Dilithium)</p>
       </div>
 
       {!hasKeys ? (
@@ -113,10 +158,27 @@ const Profile: React.FC = () => {
           <div className="setup-options">
             <div className="setup-card">
               <div className="card-icon">🔑</div>
-              <h2>Generar Claves</h2>
-              <p>Crea un nuevo par de claves automáticamente</p>
-              <button className="generate-btn" onClick={handleGenerateKeys}>
-                Generar Claves
+              <h2>Generar Claves Dilithium</h2>
+              <p>Crea un nuevo par de claves post-cuánticas automáticamente</p>
+              <div className="security-level-selector">
+                <label htmlFor="security-level">Nivel de Seguridad:</label>
+                <select
+                  id="security-level"
+                  value={securityLevel}
+                  onChange={(e) => setSecurityLevel(Number(e.target.value) as DilithiumSecurityLevel)}
+                  disabled={isGenerating}
+                >
+                  <option value={2}>Nivel 2 (Menor seguridad, claves más pequeñas)</option>
+                  <option value={3}>Nivel 3 (Recomendado, balance óptimo)</option>
+                  <option value={5}>Nivel 5 (Mayor seguridad, claves más grandes)</option>
+                </select>
+              </div>
+              <button 
+                className="generate-btn" 
+                onClick={handleGenerateKeys}
+                disabled={isGenerating}
+              >
+                {isGenerating ? '⏳ Generando...' : 'Generar Claves'}
               </button>
             </div>
 
@@ -187,14 +249,18 @@ const Profile: React.FC = () => {
                 <h3>Clave Pública</h3>
                 <button
                   className="copy-key-btn"
-                  onClick={() => handleCopyKey(publicKey, 'Clave pública')}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCopyKey(publicKey, 'Clave pública');
+                  }}
                   title="Copiar clave pública"
                 >
                   📋 Copiar
                 </button>
               </div>
               <div className="key-content">
-                <code className="key-display">{publicKey}</code>
+                <div className="key-display">{publicKey}</div>
               </div>
             </div>
 
@@ -203,14 +269,18 @@ const Profile: React.FC = () => {
                 <h3>Clave Privada</h3>
                 <button
                   className="copy-key-btn"
-                  onClick={() => handleCopyKey(privateKey, 'Clave privada')}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCopyKey(privateKey, 'Clave privada');
+                  }}
                   title="Copiar clave privada"
                 >
                   📋 Copiar
                 </button>
               </div>
               <div className="key-content">
-                <code className="key-display">{privateKey}</code>
+                <div className="key-display">{privateKey}</div>
               </div>
             </div>
           </div>

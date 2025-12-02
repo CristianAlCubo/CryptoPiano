@@ -128,6 +128,25 @@ html, body {
   text-shadow: 0 0 10px rgba(255, 165, 0, 0.8);
 }
 
+.signature-playground-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  color: #8a2be2;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.2);
+}
+
+.signature-playground-btn:hover {
+  background: rgba(138, 43, 226, 0.1);
+  border-color: rgba(138, 43, 226, 0.6);
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
+  text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+}
+
 .App h1 {
   color: #ffffff;
   font-size: 3rem;

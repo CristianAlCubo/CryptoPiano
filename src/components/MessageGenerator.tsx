@@ -1,8 +1,14 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import TextEditor from "./TextEditor";
 import MessageViewer from "./MessageViewer";
 import PasswordModal from "./PasswordModal";
-import { encryptWithPassword, serializeEncryptedData } from "../utils/crypto";
+import { 
+  encryptWithPassword, 
+  serializeEncryptedData,
+  createSignedMessage,
+  serializeSignedMessage
+} from "../utils/crypto";
 import "../assets/css/messageGenerator.css";
 
 interface MessageGeneratorProps {
@@ -94,13 +100,38 @@ function hello() {
           setShowPasswordModal(false);
           setIsEncrypting(true);
           try {
+            const privateKeyBase64 = localStorage.getItem('piano-crypto-own-private-key');
+            
+            if (!privateKeyBase64) {
+              toast.error('No tienes una clave privada configurada. Por favor, genera un par de claves en tu perfil primero.', {
+                position: "top-center",
+                autoClose: 4000,
+                theme: "dark",
+              });
+              setIsEncrypting(false);
+              return;
+            }
+
             const messageBytes = new TextEncoder().encode(content);
-            const encrypted = encryptWithPassword(password, messageBytes);
+            
+            // Convertir la clave privada de Base64 a Uint8Array
+            const privateKeyBytes = Uint8Array.from(atob(privateKeyBase64), c => c.charCodeAt(0));
+            
+            // Firmar el mensaje
+            const signedMessage = createSignedMessage(messageBytes, privateKeyBytes, 3);
+            const signedMessageSerialized = serializeSignedMessage(signedMessage);
+            
+            // Cifrar el mensaje firmado
+            const encrypted = encryptWithPassword(password, signedMessageSerialized);
             const serialized = serializeEncryptedData(encrypted);
             onFinish(serialized);
           } catch (error) {
             console.error("Error al cifrar mensaje:", error);
-            alert("Error al cifrar el mensaje. Por favor, intenta de nuevo.");
+            toast.error(`Error al cifrar el mensaje: ${error instanceof Error ? error.message : 'Error desconocido'}`, {
+              position: "top-center",
+              autoClose: 3000,
+              theme: "dark",
+            });
             setIsEncrypting(false);
           }
         }}

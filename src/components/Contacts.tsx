@@ -167,7 +167,32 @@ const Contacts: React.FC = () => {
                     className="copy-btn"
                     onClick={async () => {
                       try {
-                        await navigator.clipboard.writeText(selectedContact.publicKey);
+
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                          await navigator.clipboard.writeText(selectedContact.publicKey);
+                        } else {
+                          // Fallback para navegadores que no soportan navigator.clipboard o contextos no seguros
+                          const textArea = document.createElement("textarea");
+                          textArea.value = selectedContact.publicKey;
+                          
+                          // Asegurar que el elemento no sea visible
+                          textArea.style.position = "fixed";
+                          textArea.style.left = "-9999px";
+                          textArea.style.top = "0";
+                          
+                          document.body.appendChild(textArea);
+                          textArea.focus();
+                          textArea.select();
+                          
+                          try {
+                            const successful = document.execCommand('copy');
+                            if (!successful) {
+                              throw new Error('Falló la copia manual');
+                            }
+                          } finally {
+                            document.body.removeChild(textArea);
+                          }
+                        }
                         setSelectedContact(null);
                         toast.success('Clave pública copiada al portapapeles', {
                           position: "top-center",

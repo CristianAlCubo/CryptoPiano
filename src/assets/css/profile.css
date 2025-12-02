@@ -81,6 +81,44 @@
   line-height: 1.6;
 }
 
+.security-level-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.security-level-selector label {
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.security-level-selector select {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.security-level-selector select:focus {
+  outline: none;
+  border-color: rgba(0, 255, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.security-level-selector select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .generate-btn,
 .import-btn {
   background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(0, 255, 255, 0.1) 100%);
@@ -108,6 +146,19 @@
 .generate-btn:active,
 .import-btn:active {
   transform: translateY(0);
+}
+
+.generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.generate-btn:disabled:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(0, 255, 255, 0.1) 100%);
+  border-color: rgba(0, 255, 255, 0.3);
+  box-shadow: none;
+  transform: none;
 }
 
 .import-form-section {
@@ -298,7 +349,10 @@
 
 .key-content {
   flex: 1;
-  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .key-display {
@@ -313,9 +367,15 @@
   line-height: 1.6;
   word-break: break-all;
   white-space: pre-wrap;
-  max-height: 300px;
+  height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  resize: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .key-display::-webkit-scrollbar {

@@ -1,16 +1,35 @@
 import React, { useState, useRef, useEffect } from "react";
+import { toast } from "react-toastify";
 import { extractMessageFromWav } from "../utils/steganography";
-import { deserializeEncryptedData, decryptWithPassword } from "../utils/crypto";
+import { 
+  deserializeEncryptedData, 
+  decryptWithPassword,
+  deserializeSignedMessage,
+  verifySignature
+} from "../utils/crypto";
 import MessageViewer from "./MessageViewer";
 import PasswordModal from "./PasswordModal";
+import ContactSelectorModal from "./ContactSelectorModal";
 import "../assets/css/messageExtractor.css";
+
+interface Contact {
+  id: string;
+  name: string;
+  publicKey: string;
+}
 
 const MessageExtractor: React.FC = () => {
   const [extractedMessage, setExtractedMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showContactSelector, setShowContactSelector] = useState(false);
   const [encryptedBytes, setEncryptedBytes] = useState<Uint8Array | null>(null);
+  const [decryptedBytes, setDecryptedBytes] = useState<Uint8Array | null>(null);
+  const [signatureStatus, setSignatureStatus] = useState<{
+    verified: boolean;
+    contactName?: string;
+  } | null>(null);
   const [shouldShowModal, setShouldShowModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -111,13 +130,82 @@ const MessageExtractor: React.FC = () => {
         return;
       }
 
-      const message = new TextDecoder().decode(decrypted);
-      setExtractedMessage(message);
+      setDecryptedBytes(decrypted);
+      setIsProcessing(false);
+      setShowContactSelector(true);
     } catch (err) {
       setError(
         "Error al descifrar el mensaje. La contraseña puede ser incorrecta."
       );
       console.error("Error al descifrar:", err);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleContactSelect = (contactId: string) => {
+    if (!decryptedBytes) return;
+
+    setShowContactSelector(false);
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const stored = localStorage.getItem('piano-crypto-contacts');
+      if (!stored) {
+        setError("No se encontraron contactos. No se puede verificar la firma.");
+        setIsProcessing(false);
+        return;
+      }
+
+      const contacts: Contact[] = JSON.parse(stored);
+      const contact = contacts.find(c => c.id === contactId);
+
+      if (!contact) {
+        setError("Contacto no encontrado.");
+        setIsProcessing(false);
+        return;
+      }
+
+      const signedMessage = deserializeSignedMessage(decryptedBytes);
+
+      if (!signedMessage) {
+        setError("Error al deserializar el mensaje firmado. El mensaje puede estar corrupto.");
+        setIsProcessing(false);
+        return;
+      }
+
+      const publicKeyBytes = Uint8Array.from(atob(contact.publicKey), c => c.charCodeAt(0));
+      const isValid = verifySignature(
+        signedMessage.message,
+        signedMessage.signature,
+        publicKeyBytes,
+        3
+      );
+
+      setSignatureStatus({
+        verified: isValid,
+        contactName: contact.name
+      });
+
+      const message = new TextDecoder().decode(signedMessage.message);
+      setExtractedMessage(message);
+
+      if (isValid) {
+        toast.success(`✅ Firma verificada. Mensaje auténtico de ${contact.name}`, {
+          position: "top-center",
+          autoClose: 3000,
+          theme: "dark",
+        });
+      } else {
+        toast.error(`❌ Firma inválida. El mensaje puede haber sido modificado.`, {
+          position: "top-center",
+          autoClose: 3000,
+          theme: "dark",
+        });
+      }
+    } catch (err) {
+      setError("Error al verificar la firma. Por favor, intenta de nuevo.");
+      console.error("Error al verificar firma:", err);
     } finally {
       setIsProcessing(false);
     }
@@ -134,7 +222,10 @@ const MessageExtractor: React.FC = () => {
     setExtractedMessage(null);
     setError(null);
     setEncryptedBytes(null);
+    setDecryptedBytes(null);
+    setSignatureStatus(null);
     setShowPasswordModal(false);
+    setShowContactSelector(false);
     setShouldShowModal(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -175,6 +266,15 @@ const MessageExtractor: React.FC = () => {
             title="Descifrar Mensaje"
             message="Ingresa la contraseña para descifrar el mensaje oculto:"
           />
+
+          <ContactSelectorModal
+            isOpen={showContactSelector}
+            onConfirm={handleContactSelect}
+            onCancel={() => {
+              setShowContactSelector(false);
+              setDecryptedBytes(null);
+            }}
+          />
         </div>
 
         {error && (
@@ -192,6 +292,21 @@ const MessageExtractor: React.FC = () => {
                 ✕ Cerrar
               </button>
             </div>
+            {signatureStatus && (
+              <div className={`signature-status ${signatureStatus.verified ? 'verified' : 'invalid'}`}>
+                {signatureStatus.verified ? (
+                  <div className="status-verified">
+                    ✅ <strong>Firma verificada</strong>
+                    <span>Mensaje auténtico de {signatureStatus.contactName}</span>
+                  </div>
+                ) : (
+                  <div className="status-invalid">
+                    ❌ <strong>Firma inválida</strong>
+                    <span>El mensaje puede haber sido modificado o la clave pública no corresponde</span>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="extracted-viewer">
               <MessageViewer content={extractedMessage} />
             </div>

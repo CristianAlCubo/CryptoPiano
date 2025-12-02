@@ -1,5 +1,12 @@
 // @ts-expect-error - js-ascon no tiene tipos TypeScript
 import JsAscon from 'js-ascon';
+import { 
+  DilithiumKeyPair, 
+  DilithiumLevel,
+  DilithiumPrivateKey,
+  DilithiumPublicKey,
+  DilithiumSignature
+} from '@asanrom/dilithium';
 
 // ====================================
 // ========     CIFRADO        ========
@@ -190,6 +197,272 @@ export const deserializeEncryptedData = (data: Uint8Array): PasswordEncryptedDat
     return {
       encryptedData: { ciphertext, nonce, tag },
       salt
+    };
+  } catch {
+    return null;
+  }
+};
+
+// ====================================
+// ========     FIRMA DIGITAL  ========
+// ====================================
+
+export interface DilithiumKeyPairData {
+  publicKey: Uint8Array;
+  privateKey: Uint8Array;
+}
+
+export interface DilithiumSignatureData {
+  signature: Uint8Array;
+  message: Uint8Array;
+}
+
+export type DilithiumSecurityLevel = 2 | 3 | 5;
+
+const DEFAULT_DILITHIUM_LEVEL: DilithiumSecurityLevel = 3;
+
+export const generateDilithiumKeyPair = (
+  level: DilithiumSecurityLevel = DEFAULT_DILITHIUM_LEVEL
+): DilithiumKeyPairData => {
+  try {
+    const dilithiumLevel = DilithiumLevel.get(level);
+    const keyPair = DilithiumKeyPair.generate(dilithiumLevel);
+    
+    const publicKey = keyPair.getPublicKey().getBytes();
+    const privateKey = keyPair.getPrivateKey().getBytes();
+    
+    return {
+      publicKey,
+      privateKey
+    };
+  } catch (error) {
+    console.error('Error al generar par de claves Dilithium:', error);
+    throw new Error('Error al generar par de claves Dilithium');
+  }
+};
+
+export const signMessage = (
+  message: Uint8Array,
+  privateKeyBytes: Uint8Array,
+  level: DilithiumSecurityLevel = DEFAULT_DILITHIUM_LEVEL
+): Uint8Array => {
+  try {
+    const dilithiumLevel = DilithiumLevel.get(level);
+    const privateKey = DilithiumPrivateKey.fromBytes(privateKeyBytes, dilithiumLevel);
+    
+    const signature = privateKey.sign(message);
+    
+    return signature.getBytes();
+  } catch (error) {
+    console.error('Error al firmar mensaje:', error);
+    throw new Error('Error al firmar mensaje con Dilithium');
+  }
+};
+
+export const verifySignature = (
+  message: Uint8Array,
+  signatureBytes: Uint8Array,
+  publicKeyBytes: Uint8Array,
+  level: DilithiumSecurityLevel = DEFAULT_DILITHIUM_LEVEL
+): boolean => {
+  try {
+    const dilithiumLevel = DilithiumLevel.get(level);
+    const publicKey = DilithiumPublicKey.fromBytes(publicKeyBytes, dilithiumLevel);
+    const signature = DilithiumSignature.fromBytes(signatureBytes, dilithiumLevel);
+    
+    return publicKey.verifySignature(message, signature);
+  } catch (error) {
+    console.error('Error al verificar firma:', error);
+    return false;
+  }
+};
+
+export const serializeDilithiumKeyPair = (keyPair: DilithiumKeyPairData): Uint8Array => {
+  const publicKeyLength = keyPair.publicKey.length;
+  const privateKeyLength = keyPair.privateKey.length;
+  
+  const totalLength = 4 + publicKeyLength + 4 + privateKeyLength;
+  const result = new Uint8Array(totalLength);
+  const view = new DataView(result.buffer);
+  
+  let offset = 0;
+  
+  view.setUint32(offset, publicKeyLength, true);
+  offset += 4;
+  
+  result.set(keyPair.publicKey, offset);
+  offset += publicKeyLength;
+  
+  view.setUint32(offset, privateKeyLength, true);
+  offset += 4;
+  
+  result.set(keyPair.privateKey, offset);
+  
+  return result;
+};
+
+export const deserializeDilithiumKeyPair = (data: Uint8Array): DilithiumKeyPairData | null => {
+  try {
+    const view = new DataView(data.buffer);
+    let offset = 0;
+    
+    const publicKeyLength = view.getUint32(offset, true);
+    offset += 4;
+    
+    if (offset + publicKeyLength > data.length) {
+      return null;
+    }
+    
+    const publicKey = data.slice(offset, offset + publicKeyLength);
+    offset += publicKeyLength;
+    
+    const privateKeyLength = view.getUint32(offset, true);
+    offset += 4;
+    
+    if (offset + privateKeyLength > data.length) {
+      return null;
+    }
+    
+    const privateKey = data.slice(offset, offset + privateKeyLength);
+    
+    return {
+      publicKey,
+      privateKey
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const serializeDilithiumSignature = (signature: DilithiumSignatureData): Uint8Array => {
+  const signatureLength = signature.signature.length;
+  const messageLength = signature.message.length;
+  
+  const totalLength = 4 + signatureLength + 4 + messageLength;
+  const result = new Uint8Array(totalLength);
+  const view = new DataView(result.buffer);
+  
+  let offset = 0;
+  
+  view.setUint32(offset, signatureLength, true);
+  offset += 4;
+  
+  result.set(signature.signature, offset);
+  offset += signatureLength;
+  
+  view.setUint32(offset, messageLength, true);
+  offset += 4;
+  
+  result.set(signature.message, offset);
+  
+  return result;
+};
+
+export const deserializeDilithiumSignature = (data: Uint8Array): DilithiumSignatureData | null => {
+  try {
+    const view = new DataView(data.buffer);
+    let offset = 0;
+    
+    const signatureLength = view.getUint32(offset, true);
+    offset += 4;
+    
+    if (offset + signatureLength > data.length) {
+      return null;
+    }
+    
+    const signature = data.slice(offset, offset + signatureLength);
+    offset += signatureLength;
+    
+    const messageLength = view.getUint32(offset, true);
+    offset += 4;
+    
+    if (offset + messageLength > data.length) {
+      return null;
+    }
+    
+    const message = data.slice(offset, offset + messageLength);
+    
+    return {
+      signature,
+      message
+    };
+  } catch {
+    return null;
+  }
+};
+
+// ====================================
+// ========  MENSAJE FIRMADO    ========
+// ====================================
+
+export interface SignedMessageData {
+  message: Uint8Array;
+  signature: Uint8Array;
+}
+
+export const createSignedMessage = (
+  message: Uint8Array,
+  privateKeyBytes: Uint8Array,
+  level: DilithiumSecurityLevel = DEFAULT_DILITHIUM_LEVEL
+): SignedMessageData => {
+  const signature = signMessage(message, privateKeyBytes, level);
+  return {
+    message,
+    signature
+  };
+};
+
+export const serializeSignedMessage = (signedMessage: SignedMessageData): Uint8Array => {
+  const messageLength = signedMessage.message.length;
+  const signatureLength = signedMessage.signature.length;
+  
+  const totalLength = 4 + messageLength + 4 + signatureLength;
+  const result = new Uint8Array(totalLength);
+  const view = new DataView(result.buffer);
+  
+  let offset = 0;
+  
+  view.setUint32(offset, messageLength, true);
+  offset += 4;
+  
+  result.set(signedMessage.message, offset);
+  offset += messageLength;
+  
+  view.setUint32(offset, signatureLength, true);
+  offset += 4;
+  
+  result.set(signedMessage.signature, offset);
+  
+  return result;
+};
+
+export const deserializeSignedMessage = (data: Uint8Array): SignedMessageData | null => {
+  try {
+    const view = new DataView(data.buffer);
+    let offset = 0;
+    
+    const messageLength = view.getUint32(offset, true);
+    offset += 4;
+    
+    if (offset + messageLength > data.length) {
+      return null;
+    }
+    
+    const message = data.slice(offset, offset + messageLength);
+    offset += messageLength;
+    
+    const signatureLength = view.getUint32(offset, true);
+    offset += 4;
+    
+    if (offset + signatureLength > data.length) {
+      return null;
+    }
+    
+    const signature = data.slice(offset, offset + signatureLength);
+    
+    return {
+      message,
+      signature
     };
   } catch {
     return null;

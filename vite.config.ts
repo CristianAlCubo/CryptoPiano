@@ -8,4 +8,21 @@ export default defineConfig({
     host: true,
     allowedHosts: true,
   },
+  define: {
+    'global': 'globalThis',
+    'process.env': {},
+  },
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
+    include: ['buffer'],
+  },
 })

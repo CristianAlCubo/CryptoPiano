@@ -146,19 +146,7 @@ const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecord
     }, 100);
   }, [isRecording, getAudioContext, convertToWav, onRecordingStateChange, onBlobReady]);
 
-  const downloadRecording = useCallback((blob?: Blob) => {
-    const blobToDownload = blob || recordedBlob;
-    if (!blobToDownload) return;
 
-    const url = URL.createObjectURL(blobToDownload);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `piano-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [recordedBlob]);
 
 
   const clearRecording = useCallback(() => {
@@ -227,14 +215,6 @@ const PianoRecorder: React.FC<PianoRecorderProps> = ({ getAudioContext, onRecord
                 🔒 Añadir un secreto
               </button>
             )}
-            {/* {!hasRecording && (
-              <button
-                className="recorder-btn download-btn"
-                onClick={downloadRecording}
-              >
-                ⬇ Descargar WAV
-              </button>
-            )} */}
             {!hasRecording && (
               <button
                 className="recorder-btn clear-btn"

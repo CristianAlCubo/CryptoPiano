@@ -230,7 +230,7 @@ function App() {
             >
               👤 Perfil
             </button>
-            <button 
+            {/* <button 
               className="playground-mode-btn"
               onClick={() => setMode('crypto-playground')}
             >
@@ -241,7 +241,7 @@ function App() {
               onClick={() => setMode('signature-playground')}
             >
               ✍️ Signature Playground
-            </button>
+            </button> */}
           </div>
         </div>
       )}

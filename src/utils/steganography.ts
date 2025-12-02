@@ -1,8 +1,10 @@
-export const embedMessageInWav = async (wavBlob: Blob, message: string): Promise<Blob> => {
+export const embedMessageInWav = async (wavBlob: Blob, message: string | Uint8Array): Promise<Blob> => {
   const arrayBuffer = await wavBlob.arrayBuffer();
   const view = new DataView(arrayBuffer);
   
-  const messageBytes = new TextEncoder().encode(message);
+  const messageBytes = typeof message === 'string' 
+    ? new TextEncoder().encode(message) 
+    : message;
   const messageLength = messageBytes.length;
   
   if (messageLength === 0) {
@@ -45,7 +47,7 @@ export const embedMessageInWav = async (wavBlob: Blob, message: string): Promise
   return new Blob([arrayBuffer], { type: 'audio/wav' });
 };
 
-export const extractMessageFromWav = async (wavBlob: Blob): Promise<string | null> => {
+export const extractMessageFromWav = async (wavBlob: Blob, asBytes: boolean = false): Promise<string | Uint8Array | null> => {
   const arrayBuffer = await wavBlob.arrayBuffer();
   const view = new DataView(arrayBuffer);
   
@@ -80,6 +82,10 @@ export const extractMessageFromWav = async (wavBlob: Blob): Promise<string | nul
       sampleOffset += 2;
     }
     messageBytes[byteIndex] = byte;
+  }
+  
+  if (asBytes) {
+    return messageBytes;
   }
   
   try {

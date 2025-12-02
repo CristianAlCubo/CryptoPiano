@@ -32,11 +32,11 @@ function App() {
     }
   };
 
-  const handleFinishMessage = async (message: string) => {
-    if (!recordedBlobRef.current || !message.trim()) return;
+  const handleFinishMessage = async (encryptedData: Uint8Array) => {
+    if (!recordedBlobRef.current) return;
 
     try {
-      const wavWithMessage = await embedMessageInWav(recordedBlobRef.current, message);
+      const wavWithMessage = await embedMessageInWav(recordedBlobRef.current, encryptedData);
       
       const url = URL.createObjectURL(wavWithMessage);
       const a = document.createElement('a');
@@ -47,6 +47,7 @@ function App() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
+      toast.success('Mensaje cifrado y oculto en el audio correctamente');
       setShowMessageGenerator(false);
       setHasRecording(false);
       recordedBlobRef.current = null;

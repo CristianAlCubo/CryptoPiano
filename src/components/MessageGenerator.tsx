@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
-import TextEditor from './TextEditor';
-import MessageViewer from './MessageViewer';
-import '../assets/css/messageGenerator.css';
+import React, { useState } from "react";
+import TextEditor from "./TextEditor";
+import MessageViewer from "./MessageViewer";
+import PasswordModal from "./PasswordModal";
+import { encryptWithPassword, serializeEncryptedData } from "../utils/crypto";
+import "../assets/css/messageGenerator.css";
 
 interface MessageGeneratorProps {
-  onFinish: (message: string) => void;
+  onFinish: (encryptedData: Uint8Array) => void;
   onCancel?: () => void;
 }
 
-const MessageGenerator: React.FC<MessageGeneratorProps> = ({ onFinish, onCancel }) => {
-  const [content, setContent] = useState('');
+const MessageGenerator: React.FC<MessageGeneratorProps> = ({
+  onFinish,
+  onCancel,
+}) => {
+  const [content, setContent] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isEncrypting, setIsEncrypting] = useState(false);
 
   const defaultContent = `# Editor de Mensajes
 
@@ -59,30 +66,50 @@ function hello() {
           value={content}
           onChange={setContent}
           placeholder={defaultContent}
-          onClear={() => setContent('')}
+          onClear={() => setContent("")}
         />
         <MessageViewer content={content} />
       </div>
       <div className="generator-actions">
         <button
           className="finish-btn"
-          onClick={() => onFinish(content)}
-          disabled={!content.trim()}
+          onClick={() => setShowPasswordModal(true)}
+          disabled={!content.trim() || isEncrypting}
         >
-          ✓ Terminar Mensaje
+          {isEncrypting ? "⏳ Cifrando..." : "🔒 Cifrar Mensaje"}
         </button>
         {onCancel && (
           <button
             className="cancel-btn"
             onClick={onCancel}
+            disabled={isEncrypting}
           >
             ✕ Cancelar
           </button>
         )}
       </div>
+      <PasswordModal
+        isOpen={showPasswordModal}
+        onConfirm={async (password) => {
+          setShowPasswordModal(false);
+          setIsEncrypting(true);
+          try {
+            const messageBytes = new TextEncoder().encode(content);
+            const encrypted = encryptWithPassword(password, messageBytes);
+            const serialized = serializeEncryptedData(encrypted);
+            onFinish(serialized);
+          } catch (error) {
+            console.error("Error al cifrar mensaje:", error);
+            alert("Error al cifrar el mensaje. Por favor, intenta de nuevo.");
+            setIsEncrypting(false);
+          }
+        }}
+        onCancel={() => setShowPasswordModal(false)}
+        title="Cifrar Mensaje"
+        message="Ingresa una contraseña para cifrar el mensaje antes de ocultarlo en el audio:"
+      />
     </div>
   );
 };
 
 export default MessageGenerator;
-

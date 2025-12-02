@@ -56,14 +56,16 @@
 
 .finish-btn,
 .cancel-btn {
-  padding: 12px 24px;
+  padding: 16px 32px;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 1.1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 150px;
+  box-sizing: border-box;
+  flex: 0 0 auto !important; /* No crecer, no encoger, basar tamaño en contenido */
+  white-space: nowrap; /* Evitar que el texto se divida en múltiples líneas */
 }
 
 .finish-btn {

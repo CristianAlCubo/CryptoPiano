@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import TextEditor from "./TextEditor";
 import MessageViewer from "./MessageViewer";
 import PasswordModal from "./PasswordModal";
+import ConfirmModal from "./ConfirmModal";
 import { 
   encryptWithPassword, 
   serializeEncryptedData,
@@ -22,6 +23,7 @@ const MessageGenerator: React.FC<MessageGeneratorProps> = ({
 }) => {
   const [content, setContent] = useState("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
   const [isEncrypting, setIsEncrypting] = useState(false);
 
   const defaultContent = `# Editor de Mensajes
@@ -87,7 +89,7 @@ function hello() {
         {onCancel && (
           <button
             className="cancel-btn"
-            onClick={onCancel}
+            onClick={() => setShowCancelConfirmModal(true)}
             disabled={isEncrypting}
           >
             ✕ Cancelar
@@ -139,6 +141,22 @@ function hello() {
         title="Cifrar Mensaje"
         message="Ingresa una contraseña para cifrar el mensaje antes de ocultarlo en el audio:"
       />
+
+      {onCancel && (
+        <ConfirmModal
+          isOpen={showCancelConfirmModal}
+          onConfirm={() => {
+            setShowCancelConfirmModal(false);
+            onCancel();
+          }}
+          onCancel={() => setShowCancelConfirmModal(false)}
+          title="Confirmar Cancelación"
+          message="¿Estás seguro de que deseas cancelar? Se perderá todo el contenido del mensaje que hayas escrito."
+          confirmText="Sí, cancelar"
+          cancelText="No, continuar"
+          confirmButtonClass="confirm-btn"
+        />
+      )}
     </div>
   );
 };

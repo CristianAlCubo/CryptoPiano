@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
 import { extractMessageFromWav } from "../utils/steganography";
 import { 
@@ -31,7 +32,6 @@ const MessageExtractor: React.FC = () => {
     contactName?: string;
   } | null>(null);
   const [shouldShowModal, setShouldShowModal] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (shouldShowModal && encryptedBytes && !isProcessing) {
@@ -40,12 +40,7 @@ const MessageExtractor: React.FC = () => {
     }
   }, [shouldShowModal, encryptedBytes, isProcessing]);
 
-  const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     if (!file.type.includes("audio") && !file.name.endsWith(".wav")) {
       setError("Por favor, selecciona un archivo de audio WAV");
       return;
@@ -99,6 +94,22 @@ const MessageExtractor: React.FC = () => {
       setIsProcessing(false);
     }
   };
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      processFile(acceptedFiles[0]);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'audio/wav': ['.wav'],
+      'audio/*': ['.wav']
+    },
+    multiple: false,
+    disabled: isProcessing
+  });
 
   const handlePasswordConfirm = (password: string) => {
     if (!encryptedBytes) return;
@@ -211,13 +222,6 @@ const MessageExtractor: React.FC = () => {
     }
   };
 
-  const handleUploadClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-      fileInputRef.current.click();
-    }
-  };
-
   const handleReset = () => {
     setExtractedMessage(null);
     setError(null);
@@ -227,9 +231,6 @@ const MessageExtractor: React.FC = () => {
     setShowPasswordModal(false);
     setShowContactSelector(false);
     setShouldShowModal(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   return (
@@ -241,20 +242,36 @@ const MessageExtractor: React.FC = () => {
 
       <div className="extractor-content">
         <div className="upload-section">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/wav,.wav,audio/*"
-            onChange={handleFileSelect}
-            style={{ display: "none" }}
-          />
-          <button
-            className="upload-btn"
-            onClick={handleUploadClick}
-            disabled={isProcessing}
+          <div
+            {...getRootProps()}
+            className={`dropzone ${isDragActive ? 'drag-active' : ''} ${isProcessing ? 'processing' : ''}`}
           >
-            {isProcessing ? "⏳ Procesando..." : "📁 Subir archivo WAV"}
-          </button>
+            <input {...getInputProps()} />
+            <div className="dropzone-content">
+              {isProcessing ? (
+                <>
+                  <div className="dropzone-icon">⏳</div>
+                  <p className="dropzone-text">Procesando archivo...</p>
+                </>
+              ) : isDragActive ? (
+                <>
+                  <div className="dropzone-icon">📥</div>
+                  <p className="dropzone-text">Suelta el archivo aquí</p>
+                  <p className="dropzone-hint">Solo archivos WAV</p>
+                </>
+              ) : (
+                <>
+                  <div className="dropzone-icon">📁</div>
+                  <p className="dropzone-text">
+                    Haz clic o arrastra un archivo WAV aquí
+                  </p>
+                  <p className="dropzone-hint">
+                    Selecciona un archivo de audio WAV para extraer el mensaje oculto
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
 
           <PasswordModal
             isOpen={showPasswordModal}

@@ -34,10 +34,14 @@ const encrypt = (
   associatedData: string | Uint8Array = ''
 ): EncryptedData => {
   const nonce = getRandomUintArray(NONCE_LENGTH);
+  const ad = typeof associatedData === 'string' 
+    ? new TextEncoder().encode(associatedData)
+    : associatedData;
+  
   const ciphertextWithTag = JsAscon.encrypt(
     key,
     nonce,
-    associatedData,
+    ad,
     plaintext,
     'Ascon-AEAD128'
   );
@@ -54,11 +58,15 @@ const decrypt = (
   associatedData: string | Uint8Array = ''
 ): Uint8Array | null => {
   try {
+    const ad = typeof associatedData === 'string' 
+      ? new TextEncoder().encode(associatedData)
+      : associatedData;
+    
     const ciphertextWithTag = JsAscon.concatByteArrays(encryptedData.ciphertext, encryptedData.tag);
     const result = JsAscon.decrypt(
       key,
       encryptedData.nonce,
-      associatedData,
+      ad,
       ciphertextWithTag,
       'Ascon-AEAD128'
     );
@@ -78,7 +86,7 @@ const deriveKeyFromPassword = (
   salt: Uint8Array
 ): Uint8Array => {
   const passwordBytes = new TextEncoder().encode(password);
-  const combined = JsAscon.concatByteArrays([passwordBytes, salt]);
+  const combined = JsAscon.concatByteArrays(passwordBytes, salt);
   return JsAscon.hash(combined, 'Ascon-XOF128', KEY_LENGTH);
 };
 
@@ -90,7 +98,7 @@ export const encryptWithPassword = (
   const salt = getRandomUintArray(SALT_LENGTH);
   const key = deriveKeyFromPassword(password, salt);
   
-  const dataWithMarker = JsAscon.concatByteArrays([INTEGRITY_MARKER, data]);
+  const dataWithMarker = JsAscon.concatByteArrays(INTEGRITY_MARKER, data);
   const encryptedData = encrypt(key, dataWithMarker, associatedData);
   
   return { encryptedData, salt };

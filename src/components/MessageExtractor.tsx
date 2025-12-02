@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { extractMessageFromWav } from "../utils/steganography";
 import { deserializeEncryptedData, decryptWithPassword } from "../utils/crypto";
 import MessageViewer from "./MessageViewer";
@@ -11,7 +11,15 @@ const MessageExtractor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [encryptedBytes, setEncryptedBytes] = useState<Uint8Array | null>(null);
+  const [shouldShowModal, setShouldShowModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (shouldShowModal && encryptedBytes && !isProcessing) {
+      setShowPasswordModal(true);
+      setShouldShowModal(false);
+    }
+  }, [shouldShowModal, encryptedBytes, isProcessing]);
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -24,10 +32,12 @@ const MessageExtractor: React.FC = () => {
       return;
     }
 
-    setIsProcessing(true);
+    setShowPasswordModal(false);
+    setShouldShowModal(false);
+    setEncryptedBytes(null);
     setError(null);
     setExtractedMessage(null);
-    setEncryptedBytes(null);
+    setIsProcessing(true);
 
     try {
       const extracted = await extractMessageFromWav(file, true);
@@ -40,7 +50,8 @@ const MessageExtractor: React.FC = () => {
 
         if (encryptedData) {
           setEncryptedBytes(extracted);
-          setShowPasswordModal(true);
+          setIsProcessing(false);
+          setShouldShowModal(true);
         } else {
           try {
             const textMessage = new TextDecoder().decode(extracted);
@@ -113,13 +124,18 @@ const MessageExtractor: React.FC = () => {
   };
 
   const handleUploadClick = () => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.click();
+    }
   };
 
   const handleReset = () => {
     setExtractedMessage(null);
     setError(null);
     setEncryptedBytes(null);
+    setShowPasswordModal(false);
+    setShouldShowModal(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }

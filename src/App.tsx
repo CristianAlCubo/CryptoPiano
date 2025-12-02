@@ -9,9 +9,10 @@ import MessageExtractor from './components/MessageExtractor'
 import CryptoModeAlert from './components/CryptoModeAlert'
 import Contacts from './components/Contacts'
 import Profile from './components/Profile'
+import CryptoPlayground from './components/CryptoPlayground'
 import { embedMessageInWav } from './utils/steganography'
 
-type AppMode = 'piano' | 'extract' | 'contacts' | 'profile';
+type AppMode = 'piano' | 'extract' | 'contacts' | 'profile' | 'crypto-playground';
 
 function App() {
   const [mode, setMode] = useState<AppMode>('piano');
@@ -143,6 +144,29 @@ function App() {
     );
   }
 
+  if (mode === 'crypto-playground') {
+    return (
+      <>
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+        <button className="back-btn" onClick={handleBackToPiano}>
+          ← Volver al Piano
+        </button>
+        <CryptoPlayground />
+      </>
+    );
+  }
+
   return (
     <>
       <ToastContainer
@@ -181,6 +205,12 @@ function App() {
               onClick={() => setMode('profile')}
             >
               👤 Perfil
+            </button>
+            <button 
+              className="playground-mode-btn"
+              onClick={() => setMode('crypto-playground')}
+            >
+              🧪 Crypto Playground
             </button>
           </div>
         </div>

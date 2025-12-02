@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import ConfirmModal from './ConfirmModal';
 import '../assets/css/contacts.css';
 
 interface Contact {
@@ -13,6 +14,7 @@ const Contacts: React.FC = () => {
   const [name, setName] = useState('');
   const [publicKey, setPublicKey] = useState('');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
 
   useEffect(() => {
     loadContacts();
@@ -53,9 +55,33 @@ const Contacts: React.FC = () => {
     setPublicKey('');
   };
 
-  const handleDelete = (id: string) => {
-    const updatedContacts = contacts.filter(contact => contact.id !== id);
-    saveContacts(updatedContacts);
+  const handleDeleteClick = (contact: Contact, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setContactToDelete(contact);
+  };
+
+  const handleConfirmDelete = () => {
+    if (contactToDelete) {
+      const updatedContacts = contacts.filter(contact => contact.id !== contactToDelete.id);
+      saveContacts(updatedContacts);
+      setContactToDelete(null);
+      toast.success(`Contacto "${contactToDelete.name}" eliminado`, {
+        position: "top-center",
+        autoClose: 2000,
+        theme: "dark",
+      });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setContactToDelete(null);
+  };
+
+  const truncatePublicKey = (key: string, maxLength: number = 30): string => {
+    if (key.length <= maxLength) {
+      return key;
+    }
+    return key.substring(0, maxLength) + '...';
   };
 
   return (
@@ -66,54 +92,6 @@ const Contacts: React.FC = () => {
       </div>
       
       <div className="contacts-content">
-        <div className="contacts-table-section">
-          <h2>Lista de Contactos</h2>
-          {contacts.length === 0 ? (
-            <div className="contacts-empty">
-              <p>No hay contactos registrados</p>
-              <span>Agrega un contacto usando el formulario</span>
-            </div>
-          ) : (
-            <div className="contacts-table-wrapper">
-              <table className="contacts-table">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Clave Pública</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contacts.map((contact) => (
-                    <tr 
-                      key={contact.id}
-                      className="contact-row"
-                      onClick={() => setSelectedContact(contact)}
-                    >
-                      <td className="contact-name">{contact.name}</td>
-                      <td className="contact-key">
-                        <code>{contact.publicKey}</code>
-                      </td>
-                      <td className="contact-actions">
-                        <button
-                          className="delete-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(contact.id);
-                          }}
-                          title="Eliminar contacto"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
         <div className="contacts-form-section">
           <h2>Nuevo Contacto</h2>
           <form onSubmit={handleSubmit} className="contacts-form">
@@ -143,6 +121,51 @@ const Contacts: React.FC = () => {
               Agregar Contacto
             </button>
           </form>
+        </div>
+
+        <div className="contacts-table-section">
+          <h2>Lista de Contactos</h2>
+          {contacts.length === 0 ? (
+            <div className="contacts-empty">
+              <p>No hay contactos registrados</p>
+              <span>Agrega un contacto usando el formulario</span>
+            </div>
+          ) : (
+            <div className="contacts-table-wrapper">
+              <table className="contacts-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Clave Pública</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contacts.map((contact) => (
+                    <tr 
+                      key={contact.id}
+                      className="contact-row"
+                      onClick={() => setSelectedContact(contact)}
+                    >
+                      <td className="contact-name">{contact.name}</td>
+                      <td className="contact-key">
+                        <code title={contact.publicKey}>{truncatePublicKey(contact.publicKey)}</code>
+                      </td>
+                      <td className="contact-actions">
+                        <button
+                          className="delete-btn"
+                          onClick={(e) => handleDeleteClick(contact, e)}
+                          title="Eliminar contacto"
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
@@ -222,6 +245,17 @@ const Contacts: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!contactToDelete}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        title="Confirmar Eliminación"
+        message={`¿Estás seguro de que deseas eliminar el contacto "${contactToDelete?.name}"? Esta acción es definitiva e irreversible.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        confirmButtonClass="confirm-btn"
+      />
     </div>
   );
 };
